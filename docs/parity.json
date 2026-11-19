@@ -1,0 +1,11 @@
+{
+  "snapshot_step": 605000,
+  "precision": "float32 CPU",
+  "positions": 48,
+  "max_absolute_logit_error": 3.0517578125e-05,
+  "atol": 0.0003,
+  "rtol": 3e-05,
+  "feature_parity_inputs": 720,
+  "feature_parity_plies": 180,
+  "tiny_fixture_max_absolute_logit_error": 5.960464477539062e-07
+}

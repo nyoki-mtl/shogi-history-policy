@@ -1,0 +1,23 @@
+{
+  "model_family": "shogi_transformer_v2",
+  "pe_input_layout": "compact_2629",
+  "value_head_format": "wdl",
+  "initialization": "bt4_variance_scaling",
+  "gemm_output": "f32_residual_policy",
+  "encoder_qk_norm": "rms",
+  "hidden_dim": 8,
+  "mha_dim": 12,
+  "num_layers": 2,
+  "num_attention_heads": 3,
+  "intermediate_size": 12,
+  "enc_channels": 2,
+  "smolgen_hidden_channels": 2,
+  "smolgen_hidden_dim": 4,
+  "smolgen_gen_dim": 3,
+  "policy_dim": 4,
+  "value_embedding_dim": 2,
+  "value_hidden_dim": 8,
+  "moves_left_embedding_dim": 2,
+  "moves_left_hidden_dim": 8,
+  "use_mate_head": false
+}

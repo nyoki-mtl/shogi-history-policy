@@ -1,0 +1,39 @@
+{
+  "schema": "shogi-human-policy-v1",
+  "architecture": {
+    "enc_channels": 16,
+    "encoder_qk_norm": "none",
+    "hidden_dim": 256,
+    "intermediate_size": 384,
+    "mha_dim": 256,
+    "model_family": "shogi_transformer_v2",
+    "num_attention_heads": 8,
+    "num_layers": 10,
+    "pe_input_layout": "compact_2629",
+    "policy_dim": 256,
+    "smolgen_gen_dim": 64,
+    "smolgen_hidden_channels": 32,
+    "smolgen_hidden_dim": 128
+  },
+  "step": 605000,
+  "selection": "ema",
+  "status": "training-preview",
+  "policy_labels": 1496,
+  "history_frames": 8,
+  "history_padding": "zero_board_hand31",
+  "draw_reference_plies": 320,
+  "conditioning": {
+    "rating_order": [
+      "self",
+      "opponent"
+    ],
+    "rating_center": 1500,
+    "rating_scale": 1500,
+    "time_encoding": "log1p(seconds)/log1p(3600)",
+    "missing": "paired rating and clock masks after normalization"
+  },
+  "files": {
+    "policy.safetensors": "9156ebd9d0706b47508763ea91dcee84e2d989b89bb69cfddde4006a907867b6"
+  },
+  "geometry_sha256": "0c42ae37cd63ab094890cb7f9f3d2377c6ec3df727451d8e7397d4d2a36d2488"
+}

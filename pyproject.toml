@@ -1,0 +1,34 @@
+[project]
+name = "shogi-human-policy"
+version = "0.1.0.dev0"
+description = "Rating- and clock-conditioned human move prediction for shogi"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = ["numpy>=2,<3", "torch>=2.8,<3", "safetensors>=0.6,<1", "rsshogi>=1.3,<2"]
+
+[project.scripts]
+shogi-human-policy = "shogi_human_policy.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "ruff>=0.12,<1"]
+analysis = ["matplotlib>=3.10,<4"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/shogi_human_policy"]
+
+[tool.ruff]
+line-length = 110
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.uv]
+exclude-newer = "2026-11-12T00:00:00Z"
