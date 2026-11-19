@@ -60,6 +60,11 @@ for move in result.moves:
 
 ![入力を省略した場合の変化](docs/assets/input-effects.png)
 
+自分の入力Rを変えた場合の正解率も、[実際の棋力帯とのヒートマップ](docs/rating-response.md)で比較できます。
+相手R、時計、履歴を固定し、各棋力帯の同じ局面を使っています。
+
+![実際の棋力帯と入力Rごとの正解率](docs/assets/rating-input-accuracy.png)
+
 ## モデル
 
 盤面81マスと持ち駒14種類を扱う95 tokenのTransformerです。
@@ -82,6 +87,9 @@ uv run ruff check .
 uv run ruff format --check .
 uv build
 ```
+
+図を再生成する場合は、Noto Sans CJK JPなどの日本語フォントが必要です。
+WindowsではBIZ UDPゴシックやメイリオも利用できます。
 
 推論に学習リポジトリ、JAX、Flax、TPU、棋譜DBは不要です。
 CPUのfloat32を検証対象にしています。
