@@ -88,8 +88,10 @@ def dot_panels(entries, labels, title, subtitle, path):
     save(fig, path)
 
 
-def plot_standard(report, output):
-    entries = [entry for entry in report["groups"]["self_rating"] if not entry.get("unknown")]
+def plot_standard(report, output, *, rating_entries=None):
+    entries = rating_entries
+    if entries is None:
+        entries = [entry for entry in report["groups"]["self_rating"] if not entry.get("unknown")]
     subtitle = f"{report['snapshot_step']:,}更新 EMA ／ 検証用 {report['baseline']['n']:,}局面 ／ float32"
     fig, axes = plt.subplots(2, 1, figsize=(10.8, 5.6), sharex=True, layout="constrained")
     centers = [(entry["lower"] + entry["upper"]) / 2 for entry in entries]
@@ -98,6 +100,9 @@ def plot_standard(report, output):
     ):
         values = [entry[key] * (100 if key == "top1" else 1) for entry in entries]
         ax.plot(centers, values, marker="o", markersize=4, color=color, linewidth=1.6)
+        if all(key + "_ci95" in entry for entry in entries):
+            ci = np.array([entry[key + "_ci95"] for entry in entries]) * (100 if key == "top1" else 1)
+            ax.fill_between(centers, ci[:, 0], ci[:, 1], color=color, alpha=0.12, linewidth=0)
         ax.set_xlim(0, 3000)
         ax.set_xticks(np.arange(0, 3001, 200))
         ax.tick_params(axis="x", labelsize=10, length=0, pad=7)
@@ -224,6 +229,36 @@ def plot_matrix(report, output):
         save(fig, output / f"{filename}.png", vector=True)
 
 
+def plot_high_rating_response(report, output):
+    """Paired uncertainty against input R2900 in the highest actual rating band."""
+    reference = report["input_ratings"].index(2900)
+    entries = [column[-1] for column in report["cells"]]
+    x = np.array(report["input_ratings"])
+    fig, axes = plt.subplots(1, 2, figsize=(11, 3.8), layout="constrained")
+    for ax, key, scale, label, color in zip(
+        axes,
+        ["top1", "nll"],
+        [100, 1],
+        ["正解率の差（ポイント）", "NLLの差"],
+        ["#2166ac", "#b65b29"],
+        strict=True,
+    ):
+        values = np.array([e[key] - entries[reference][key] for e in entries]) * scale
+        ci = np.array([e[key + "_delta_vs_2900_ci95"] for e in entries]) * scale
+        ax.axhline(0, color="#7b8794", lw=0.9)
+        ax.fill_between(x, ci[:, 0], ci[:, 1], color=color, alpha=0.15, linewidth=0)
+        ax.plot(x, values, color=color, marker="o", markersize=3, linewidth=1.7)
+        ax.set_xlim(0, 3000)
+        ax.set_xticks(np.arange(0, 3001, 600))
+        ax.set_xlabel("自分の入力R")
+        ax.set_ylabel(label)
+        ax.grid(axis="y", color="#e3e8ed", alpha=0.7)
+        ax.tick_params(length=0, pad=7)
+    axes[0].set_title("正解率（上ほど良い）", loc="left")
+    axes[1].set_title("損失（下ほど良い）", loc="left")
+    save(fig, output / "high-rating-input-response.png", vector=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("metrics", type=Path)
@@ -244,15 +279,22 @@ def main():
         writer.writeheader()
         for group, entries in report["groups"].items():
             writer.writerows(dict(group=group, **entry) for entry in entries)
-    plot_standard(report, args.output)
+    matrix = None
+    rating_entries = None
     if args.rating_matrix:
         matrix = json.loads(args.rating_matrix.read_text(encoding="utf-8"))
-        if (
-            matrix["weights_sha256"] != report["weights_sha256"]
-            or matrix["dataset_sha256"] != report["dataset_sha256"]
-        ):
-            raise ValueError("matrix model or evaluation dataset differs from standard report")
+        if matrix["weights_sha256"] != report["weights_sha256"] or matrix["split"] != report["split"]:
+            raise ValueError("matrix model or evaluation split differs from standard report")
+        if matrix.get("matched_selection"):
+            rating_entries = [
+                dict(lower=band["lower"], upper=band["upper"], **entry)
+                for band, entry in zip(matrix["bands"], matrix["observed"], strict=True)
+            ]
+    plot_standard(report, args.output, rating_entries=rating_entries)
+    if matrix:
         plot_matrix(matrix, args.output)
+        if matrix.get("matched_selection"):
+            plot_high_rating_response(matrix, args.output)
 
 
 if __name__ == "__main__":

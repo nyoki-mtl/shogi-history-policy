@@ -49,3 +49,20 @@ def test_rating_groups_half_open_boundaries():
     values = {"nll": np.arange(len(ratings), dtype=float), "top1": np.ones(len(ratings))}
     groups = module.rating_groups(ratings, np.ones(len(ratings), bool), values)
     assert [(g["lower"], g["upper"], g["n"]) for g in groups] == [(0, 200, 2), (200, 400, 2), (2800, 3000, 2)]
+
+
+def test_game_bootstrap_keeps_paired_differences_and_position_weights():
+    tools = Path(__file__).parents[1] / "tools"
+    spec = importlib.util.spec_from_file_location("high_rating", tools / "evaluation_stats.py")
+    module = importlib.util.module_from_spec(spec)
+    sys.path.insert(0, str(tools))
+    try:
+        spec.loader.exec_module(module)
+    finally:
+        sys.path.pop(0)
+    # One two-position game and one single-position game; a fixed +2 intervention.
+    values = np.array([[0, 0, 3], [2, 2, 5]], float)
+    result = module.game_bootstrap(values, [10, 10, 20], reference=0, repetitions=1000)
+    np.testing.assert_allclose(result["delta_ci95"], [[0, 0], [2, 2]])
+    np.testing.assert_allclose(result["mean_ci95"], [[0, 3], [2, 5]])
+    assert result == module.game_bootstrap(values, [10, 10, 20], reference=0, repetitions=1000)
