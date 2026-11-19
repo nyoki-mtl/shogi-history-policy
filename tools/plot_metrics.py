@@ -10,8 +10,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import font_manager, patheffects
-from matplotlib.patches import Rectangle
+from matplotlib import font_manager
+from matplotlib.ticker import MaxNLocator
 
 
 def configure_fonts():
@@ -59,14 +59,6 @@ def save(fig, path, *, vector=False):
     plt.close(fig)
 
 
-def band_label(entry):
-    if entry["lower"] is None:
-        return f"{entry['upper']}未満"
-    if entry["upper"] is None:
-        return f"{entry['lower']}以上"
-    return f"{entry['lower']}〜{entry['upper'] - 1}"
-
-
 def dot_panels(entries, labels, title, subtitle, path):
     fig, axes = plt.subplots(
         1, 2, figsize=(11.5, max(3.5, len(entries) * 0.45 + 1.8)), sharey=True, layout="constrained"
@@ -99,13 +91,21 @@ def dot_panels(entries, labels, title, subtitle, path):
 def plot_standard(report, output):
     entries = [entry for entry in report["groups"]["self_rating"] if not entry.get("unknown")]
     subtitle = f"{report['snapshot_step']:,}更新 EMA ／ 検証用 {report['baseline']['n']:,}局面 ／ float32"
-    dot_panels(
-        entries,
-        [band_label(entry) for entry in entries],
-        "実際の棋力帯ごとの予測性能",
-        f"{report['snapshot_step']:,}更新 EMA ／ 検証用 {sum(entry['n'] for entry in entries):,}局面 ／ 0以上3000未満",
-        output / "rating-performance.png",
-    )
+    fig, axes = plt.subplots(2, 1, figsize=(10.8, 5.6), sharex=True, layout="constrained")
+    centers = [(entry["lower"] + entry["upper"]) / 2 for entry in entries]
+    for ax, key, title, color in zip(
+        axes, ["top1", "nll"], ["正解率（%）", "損失（NLL）"], ["#2166ac", "#b65b29"], strict=True
+    ):
+        values = [entry[key] * (100 if key == "top1" else 1) for entry in entries]
+        ax.plot(centers, values, marker="o", markersize=4, color=color, linewidth=1.6)
+        ax.set_xlim(0, 3000)
+        ax.set_xticks(np.arange(0, 3001, 200))
+        ax.tick_params(axis="x", labelsize=10, length=0, pad=7)
+        ax.tick_params(axis="y", length=0)
+        ax.set_title(title, loc="left", pad=12)
+        ax.grid(axis="y", color="#e3e8ed")
+    axes[-1].set_xlabel("実R（200刻み）", labelpad=10)
+    save(fig, output / "rating-performance.png")
     entries = report["groups"]["ply"]
     dot_panels(
         entries,
@@ -159,12 +159,12 @@ def plot_matrix(report, output):
     nll = np.array([[np.nan if cell is None else cell["nll"] for cell in col] for col in report["cells"]]).T
     baseline = report["input_ratings"].index(1500)
     versions = [
-        ("rating-input-accuracy", accuracy, "入力する自分のRと正解率", "正解率（%）", "YlGnBu", False, True),
+        ("rating-input-accuracy", accuracy, "着手の正解率", "正解率（%）", "YlGnBu", False, True),
         (
             "rating-input-accuracy-delta",
             accuracy - accuracy[:, baseline, None],
-            "入力Rを1500に固定した場合からの正解率の変化",
-            "正解率の差（ポイント）",
+            "正解率の変化（1500固定比）",
+            "差（ポイント）",
             "RdBu",
             True,
             True,
@@ -172,91 +172,55 @@ def plot_matrix(report, output):
         (
             "rating-input-nll",
             nll - nll[:, baseline, None],
-            "入力Rを1500に固定した場合からの損失の変化",
-            "NLLの差（負なら改善）",
+            "損失の変化（1500固定比）",
+            "NLL差",
             "RdBu_r",
             True,
             False,
         ),
     ]
-    for filename, values, title, legend, cmap_name, centered, maximize in versions:
-        fig, ax = plt.subplots(
-            figsize=(max(12.5, values.shape[1] * 0.85 + 3), max(6.5, values.shape[0] * 0.5 + 2)),
-            layout="constrained",
-        )
-        cmap = plt.get_cmap(cmap_name)
+    for filename, values, title, label, cmap_name, centered, maximize in versions:
+        fig, ax = plt.subplots(figsize=(10.8, 9), layout="constrained")
         if centered:
             limit = max(float(np.nanmax(np.abs(values))), 0.0001)
             low, high = -limit, limit
         else:
             low, high = float(np.nanmin(values)), float(np.nanmax(values))
-        picture = ax.imshow(values, cmap=cmap, vmin=low, vmax=high, aspect="auto")
-        ax.set_xticks(
-            np.arange(len(report["input_ratings"])),
-            [f"{rating:,}" + ("\n基準" if rating == 1500 else "") for rating in report["input_ratings"]],
+        picture = ax.imshow(
+            values,
+            cmap=cmap_name,
+            vmin=low,
+            vmax=high,
+            extent=(0, 3000, 3000, 0),
+            aspect="equal",
+            interpolation="nearest",
         )
-        ax.set_yticks(
-            np.arange(len(report["bands"])),
-            [f"{band['label']}\n{band['n']:,}局面" for band in report["bands"]],
-        )
-        ax.set_xlabel("モデルへ与える自分のレーティング", labelpad=12)
-        ax.set_ylabel("実際に指した人のレーティング帯", labelpad=12)
-        ax.tick_params(length=0, pad=9)
-        ax.set_xticks(np.arange(values.shape[1] + 1) - 0.5, minor=True)
-        ax.set_yticks(np.arange(values.shape[0] + 1) - 0.5, minor=True)
-        ax.grid(which="minor", color="white", lw=1.5)
-        ax.tick_params(which="minor", length=0)
+        edges = np.arange(0, 3001, 200)
+        ax.set_xticks(edges)
+        ax.set_yticks(edges)
+        ax.tick_params(length=0, pad=7, labelsize=10)
+        ax.set_xlabel("入力R", labelpad=12)
+        ax.set_ylabel("実R", labelpad=12)
+        ax.set_title(title, loc="left", fontsize=16, pad=16)
+        ax.grid(color="white", linewidth=0.45, alpha=0.6)
         for row in range(values.shape[0]):
             if not np.isfinite(values[row]).any():
                 continue
             best = np.nanmax(values[row]) if maximize else np.nanmin(values[row])
-            for col, value in enumerate(values[row]):
-                if not np.isfinite(value):
-                    continue
-                is_best = bool(np.isclose(value, best, rtol=0, atol=1e-10))
-                rgba = cmap((value - low) / max(high - low, 1e-9))
-                luminance = 0.2126 * rgba[0] + 0.7152 * rgba[1] + 0.0722 * rgba[2]
-                label = (
-                    f"{value:+.2f}"
-                    if centered and maximize
-                    else f"{value:+.3f}"
-                    if centered
-                    else f"{value:.2f}"
-                )
-                ax.text(
-                    col,
-                    row,
-                    label,
-                    ha="center",
-                    va="center",
-                    color="white" if luminance < 0.5 else "#14222e",
-                    fontsize=12,
-                    weight="bold" if is_best else "normal",
-                )
-                if is_best:
-                    ax.add_patch(
-                        Rectangle(
-                            (col - 0.46, row - 0.46),
-                            0.92,
-                            0.92,
-                            fill=False,
-                            edgecolor="#111111",
-                            lw=2.4,
-                            path_effects=[
-                                patheffects.Stroke(linewidth=4.5, foreground="white"),
-                                patheffects.Normal(),
-                            ],
-                        )
-                    )
-        colorbar = fig.colorbar(picture, ax=ax, shrink=0.85, pad=0.03)
-        colorbar.set_label(legend, labelpad=12)
-        ax.set_title(
-            f"{title}\n{report['snapshot_step']:,}更新EMA ／ 枠＝行の最良値 ／ 他の入力は固定",
-            loc="left",
-            fontsize=15,
-            pad=20,
-            linespacing=1.8,
-        )
+            columns = np.flatnonzero(np.isclose(values[row], best, rtol=0, atol=1e-10))
+            ax.scatter(
+                np.asarray(report["input_ratings"])[columns],
+                np.full(len(columns), (report["bands"][row]["lower"] + report["bands"][row]["upper"]) / 2),
+                s=38,
+                facecolor="white",
+                edgecolor="#263746",
+                linewidth=1,
+                zorder=3,
+            )
+        colorbar = fig.colorbar(picture, ax=ax, fraction=0.035, pad=0.025, shrink=0.78)
+        colorbar.locator = MaxNLocator(5)
+        colorbar.update_ticks()
+        colorbar.set_label(label, labelpad=10)
         save(fig, output / f"{filename}.png", vector=True)
 
 
