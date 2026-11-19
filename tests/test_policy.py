@@ -108,7 +108,7 @@ def test_invalid_inference_parameters(model, kwargs):
 
 
 def test_cli(model_directory, capsys):
-    assert main(["predict", "--model", str(model_directory), "--top-k", "2"]) == 0
+    assert main(["predict", "--model", str(model_directory), "--top-k", "2", "--format", "json"]) == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["legal_count"] == 30
     assert len(payload["moves"]) == 2

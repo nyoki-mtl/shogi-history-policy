@@ -1,83 +1,106 @@
 # shogi-human-policy
 
 レーティング、残り持ち時間、局面履歴から、人間が次に指す手の確率を予測する将棋モデルです。
-自分と相手の条件を変えた分析や、人間の着手傾向を利用するアプリケーションに使えます。
+棋譜の途中局面を調べたり、入力Rを変えて着手傾向を比較したりできます。
 
 現在はローカル準備版です。
 GitHubリポジトリと重みの配布先はまだ作成していません。
-以下の性能は、学習途中の **605,000更新EMA** を固定して測定したものです。
 
-## 推論を試す
+## まず試す
 
 Python 3.11〜3.13を使用します。
-`uv`で依存関係をインストールします。
+推論に学習リポジトリ、JAX、TPU、棋譜DBは不要です。
+以下のコマンドは、このリポジトリのルートで実行します。
 
 ```console
 uv sync
-uv run shogi-human-policy predict --model models/preview-step-0605000 --position "startpos moves 7g7f 3c3d" --self-rating 1500 --opponent-rating 1800 --self-time-seconds 90 --opponent-time-seconds 60 --top-k 5
+uv run shogi-human-policy predict --model models/preview-step-0605000 --position "startpos moves 7g7f 3c3d"
 ```
 
-`models/preview-step-0605000/`にはローカルで準備した`manifest.json`と`policy.safetensors`を配置しています。
+モデルディレクトリには、同じモデルの`manifest.json`と`policy.safetensors`を置きます。
+読み込み時に重みのSHA-256と構造を照合します。
 重みはGitに含めません。
-別のPCで使う場合は、この2ファイルを同じディレクトリへコピーします。
-読み込み時にSHA-256とモデル構造を照合します。
+
+## 入力できるもの
+
+| 手元の情報 | 入力方法 |
+|---|---|
+| 現在局面のSFEN | `--position "<SFENの4フィールド>"` |
+| SFENとその後の着手 | `--position "<SFEN> moves 7g7f 3c3d"` |
+| 平手初期局面からの着手 | `--position "startpos moves 7g7f 3c3d"` |
+| KIF / KIFU / KI2 / CSA | `--file game.kif` |
+| 棋譜の途中局面 | `--file game.kif --ply 30` |
+
+`--ply 30`は開始局面から30手指した後で、平手初期局面からなら31手目を予測します。
+`0`は開始局面、省略時は末尾です。
+履歴も予測に使うため、分かる場合はSFEN単体より棋譜や着手列を渡してください。
+
+付属のサンプルで、2手指した後を試せます。
+
+```console
+uv run shogi-human-policy predict --model models/preview-step-0605000 --file examples/records/opening.kif --ply 2 --top-k 5
+```
+
+標準出力には、日本語表記、USI表記、確率を表示します。
+機械処理には`--format json`を指定してください。
+詳しくは[入力と出力](docs/inference.md)を参照してください。
+
+## Pythonから使う
 
 ```python
 from shogi_human_policy import Conditions, PolicyModel, Position
 
 model = PolicyModel.from_directory("models/preview-step-0605000")
-position = Position.from_usi("startpos moves 7g7f 3c3d")
+position = Position.from_file("examples/records/opening.kif", ply=2)
 result = model.predict(
     position,
-    Conditions(ratings=(1500, 1800), clocks=(90, 60)),
+    Conditions(ratings=(1500, 1800)),  # 現在の手番側R、相手R。時計は不明。
     top_k=5,
 )
-for move in result.moves:
-    print(move.usi, move.probability)
+for row in result.as_rows(position):
+    print(row["notation"], row["usi"], f"{row['probability']:.2%}")
 ```
 
-レーティングと時計は、それぞれ自分、相手の順です。
-`Conditions()`なら両方不明、`Conditions(ratings=(1500, 1800))`なら時計だけ不明として推論できます。
-各組は2人分を一緒に指定または省略します。
-既知の0秒と、不明な時間は区別されます。
+`Position.from_sfen(sfen, moves=["7g7f", "3c3d"])`や、`Position.from_usi("startpos moves ...")`も使えます。
+`Conditions()`ならRも時計も不明として推論します。
+時計を指定する場合は、`clocks=(自分の利用可能秒数, 相手の利用可能秒数)`を渡します。
+本時間と秒読みがある場合は合算し、当該手に実際に使った時間を混ぜないでください。
+Rと時計は各組を2人分まとめて指定または省略します。
+棋譜の名前や時間ヘッダから自動推定はしません。
 
-時計は **着手を選ぶ前に利用可能な秒数** を入力します。
-本時間と秒読みのある対局なら、その時点の本時間と利用可能な秒読みを合算します。
-フィッシャーの次回加算を先取りせず、実際の対局ルールに従って算出してください。
-詳しくは[入力仕様](docs/inference.md)を参照してください。
+## Colabで試す
 
-## 性能と入力の効果
+[デモノートブック](notebooks/demo.ipynb)をColabへアップロードして実行できます。
+SFENの貼り付け、棋譜アップロード、途中局面の選択、盤面表示、日本語の上位候補表示に対応しています。
+先手と後手のRを指定でき、手番に応じた自他の振り分けも行います。
 
-[評価結果](docs/evaluation.md)に、棋力帯別の正解率とpolicy loss、手数帯別の精度、条件と履歴の省略による変化を掲載します。
-対局単位で学習から除外したvalidationを使用し、未使用testは使いません。
-正解率は実際の人間の着手との一致率で、対局時の勝率や棋力保証ではありません。
+現時点では、ローカルで`uv build --wheel`を実行して作ったwheelと、モデルの2ファイルをノートブックからアップロードします。
+標準のCPUランタイムで使用できます。
+[実行手順](docs/colab.md)も参照してください。
 
-| 評価対象 | 人間の着手との一致率 | policy NLL |
-|---|---:|---:|
-| 自然頻度のvalidation 50,000局面 | 58.75% | 1.2677 |
+## 予測性能
 
-![棋力帯別の予測性能](docs/assets/rating-performance.png)
+学習途中の605,000更新EMAを、固定した自然頻度のvalidation 50,000局面で評価した値です。
+未使用testは使っていません。
 
-![入力を省略した場合の変化](docs/assets/input-effects.png)
+| 人間の着手との一致率 | policy NLL |
+|---:|---:|
+| 58.75% | 1.2677 |
 
-自分の入力Rを変えた場合の正解率も、[実際の棋力帯とのヒートマップ](docs/rating-response.md)で比較できます。
-相手R、時計、履歴を固定し、各棋力帯の同じ局面を使っています。
-R帯は0以上3000未満を200刻み、入力Rは各帯の中央の100、300、…、2900で比較しています。
+![実Rと入力Rごとの正解率](docs/assets/rating-input-accuracy.png)
 
-![実際の棋力帯と入力Rごとの正解率](docs/assets/rating-input-accuracy.png)
+両軸は200刻みで、丸は各実R帯で最良だった入力帯です。
+[入力Rの効果](docs/rating-response.md)と[評価結果](docs/evaluation.md)に、条件の省略、履歴、手数帯ごとの比較を掲載しています。
 
-## モデル
+## モデルと利用範囲
 
-盤面81マスと持ち駒14種類を扱う95 tokenのTransformerです。
-最大8局面の履歴を入力し、自分と相手のレーティング、時計、条件の既知性をAdaLNへ渡します。
-合法手のlogitをsoftmaxし、USI形式の着手と確率を返します。
-`top_k`で上位だけ返す場合も確率は全合法手を分母とし、再正規化しません。
+最大8局面の履歴と、R、時計、条件の既知性を入力するAdaLN付きTransformerです。
+学習時には条件の省略と履歴のランダム短縮を行っています。
+確率は全合法手を分母としており、上位候補だけを表示した場合も再正規化しません。
+指定Rでの対局棋力を保証するものではありません。
+valueは今回の人間棋譜で学習していないため、APIには含めていません。
 
-学習では条件をランダムに省略し、履歴もランダムに短縮しています。
-現在局面しか分からない場合も利用できますが、可能なら初期局面と着手列を渡してください。
-valueは今回の人間棋譜で学習していないため、配布形式とAPIには含めていません。
-
-[モデルの来歴](docs/model-card.md) / [入力仕様](docs/inference.md) / [配布形式](docs/model-format.md)
+[モデルの来歴](docs/model-card.md) / [入力仕様](docs/inference.md) / [モデル形式](docs/model-format.md)
 
 ## 開発
 
@@ -89,11 +112,7 @@ uv run ruff format --check .
 uv build
 ```
 
-図を再生成する場合は、Noto Sans CJK JPなどの日本語フォントが必要です。
-WindowsではBIZ UDPゴシックやメイリオも利用できます。
-
-推論に学習リポジトリ、JAX、Flax、TPU、棋譜DBは不要です。
-CPUのfloat32を検証対象にしています。
-PyTorchでデバイスを指定できますが、CUDAでの数値と速度は未測定です。
-
-公開前に、コードとモデル重みのライセンス、重みの配布先、最終モデルでの再評価を確定します。
+CPU float32で検証しています。
+CUDAでの数値と速度は未測定です。
+図の再生成には日本語フォントが必要です。
+公開前に確定する項目は[モデルの来歴](docs/model-card.md)に記載しています。

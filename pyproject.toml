@@ -10,7 +10,7 @@ dependencies = ["numpy>=2,<3", "torch>=2.8,<3", "safetensors>=0.6,<1", "rsshogi>
 shogi-human-policy = "shogi_human_policy.cli:main"
 
 [dependency-groups]
-dev = ["pytest>=8,<10", "ruff>=0.12,<1"]
+dev = ["pytest>=8,<10", "ruff>=0.12,<1", "nbformat>=5.10,<6", "ipython>=8,<10"]
 analysis = ["matplotlib>=3.10,<4"]
 
 [build-system]

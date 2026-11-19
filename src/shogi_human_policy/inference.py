@@ -3,15 +3,17 @@
 import hashlib
 import json
 import math
+from collections.abc import Sequence
 from dataclasses import dataclass
 from importlib.resources import files as resources
 from pathlib import Path
 
 import numpy as np
+import rsshogi
 from safetensors.torch import load_file
 
 from .network import ModelSpec, PolicyNetwork
-from .position import Conditions, encode
+from .position import Conditions, Position, encode
 
 
 @dataclass(frozen=True)
@@ -27,13 +29,28 @@ class Prediction:
     entropy: float
     legal_count: int
 
+    def as_rows(self, position: Position) -> list[dict[str, str | float]]:
+        """Return display rows with USI, Japanese notation, and full-distribution probability."""
+        board = position.to_board()
+        return [
+            dict(
+                usi=item.usi,
+                notation=rsshogi.core.Move.from_usi(item.usi).to_ki2(board) or item.usi,
+                probability=item.probability,
+            )
+            for item in self.moves
+        ]
+
 
 class PolicyModel:
+    """Verified CPU float32 policy inference with optional rating/clock conditions."""
+
     def __init__(self, network, manifest):
         self.network, self.manifest = network, manifest
 
     @classmethod
     def from_directory(cls, directory, *, device="cpu"):
+        """Read a manifest and its hash-verified policy.safetensors."""
         directory = Path(directory)
         manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
         if (
@@ -70,13 +87,31 @@ class PolicyModel:
         )
         return cls(network, manifest)
 
-    def predict(self, position, conditions=None, *, history_plies=7, temperature=1.0, top_k=None):
+    def predict(
+        self,
+        position: Position,
+        conditions: Conditions | None = None,
+        *,
+        history_plies: int = 7,
+        temperature: float = 1.0,
+        top_k: int | None = None,
+    ) -> Prediction:
+        """Predict legal moves; top-k probabilities retain the full legal-move denominator."""
         conditions = conditions if conditions is not None else Conditions()
         return self.predict_batch(
             [position], [conditions], history_plies=history_plies, temperature=temperature, top_k=top_k
         )[0]
 
-    def predict_batch(self, positions, conditions=None, *, history_plies=7, temperature=1.0, top_k=None):
+    def predict_batch(
+        self,
+        positions: Sequence[Position],
+        conditions: Sequence[Conditions] | None = None,
+        *,
+        history_plies: int = 7,
+        temperature: float = 1.0,
+        top_k: int | None = None,
+    ) -> list[Prediction]:
+        """Predict a batch in input order, with one condition group per position."""
         if not positions:
             return []
         if not math.isfinite(temperature) or temperature <= 0:
