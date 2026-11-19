@@ -28,12 +28,24 @@ def test_rating_matrix_stratification():
         spec.loader.exec_module(module)
     finally:
         sys.path.pop(0)
-    ratings = np.array([100] * 10 + [700] * 10 + [3200, 3300, 3400])
+    ratings = np.array([100] * 10 + [700] * 10 + [2800, 2900, 2999, 3000, 3200, -1])
     known = np.ones(len(ratings), bool)
-    known[-1] = False
+    known[22] = False
     indices, bands = module.stratified_indices(ratings, known, 3, 77)
     repeated, _ = module.stratified_indices(ratings, known, 3, 77)
     np.testing.assert_array_equal(indices, repeated)
     assert len(indices) == len(set(indices)) == 8
     assert known[indices].all()
-    assert [(bands[indices] == b).sum() for b in [0, 1, 6]] == [3, 3, 2]
+    assert [(bands[indices] == b).sum() for b in [0, 3, 14]] == [3, 3, 2]
+    assert ((ratings[indices] >= 0) & (ratings[indices] < 3000)).all()
+
+
+def test_rating_groups_half_open_boundaries():
+    path = Path(__file__).parents[1] / "tools/evaluate.py"
+    spec = importlib.util.spec_from_file_location("evaluation", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    ratings = np.array([-1, 0, 199, 200, 399, 2800, 2999, 3000, 3200])
+    values = {"nll": np.arange(len(ratings), dtype=float), "top1": np.ones(len(ratings))}
+    groups = module.rating_groups(ratings, np.ones(len(ratings), bool), values)
+    assert [(g["lower"], g["upper"], g["n"]) for g in groups] == [(0, 200, 2), (200, 400, 2), (2800, 3000, 2)]

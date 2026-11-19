@@ -44,6 +44,18 @@ def summarize(m, mask=None):
     return {"n": int(mask.sum()), **{k: float(v[mask].mean()) for k, v in m.items()}}
 
 
+def rating_groups(ratings, known, values):
+    return [
+        dict(
+            lower=lower,
+            upper=lower + 200,
+            **summarize(values, known & (ratings >= lower) & (ratings < lower + 200)),
+        )
+        for lower in range(0, 3000, 200)
+        if (known & (ratings >= lower) & (ratings < lower + 200)).any()
+    ]
+
+
 def predict(model, data, indices, mode, batch_size):
     result = []
     for start in range(0, len(indices), batch_size):
@@ -99,6 +111,7 @@ def main():
         precision="float32 CPU",
         environment=dict(torch=torch.__version__, numpy=np.__version__),
         normalization="legal moves, temperature=1",
+        rating_group_range=dict(lower_inclusive=0, upper_exclusive=3000, width=200),
         baseline=summarize(m),
         runtime=dict(seconds=elapsed, batch_size=args.batch_size, threads=args.threads),
         groups={},
@@ -125,18 +138,10 @@ def main():
         if (~known).any():
             report["groups"][name].append(dict(unknown=True, **summarize(m, ~known)))
 
-    groups(
-        "self_rating",
-        data["ratings"][:, 0],
-        [500, 1000, 1500, 2000, 2500, 3000],
-        data["condition_known"][:, 0] > 0,
-    )
-    groups(
-        "opponent_rating",
-        data["ratings"][:, 1],
-        [500, 1000, 1500, 2000, 2500, 3000],
-        data["condition_known"][:, 0] > 0,
-    )
+    for column, name in enumerate(("self_rating", "opponent_rating")):
+        report["groups"][name] = rating_groups(
+            data["ratings"][:, column], data["condition_known"][:, 0] > 0, m
+        )
     groups("ply", data["game_ply"], [21, 61])
     groups("self_seconds", data["clock_seconds"][:, 0], [10, 30, 60, 300], data["condition_known"][:, 1] > 0)
     rng = np.random.default_rng(20261120)

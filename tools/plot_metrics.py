@@ -41,12 +41,21 @@ def configure_fonts():
             "axes.unicode_minus": False,
             "figure.facecolor": "white",
             "savefig.facecolor": "white",
+            "svg.hashsalt": "shogi-human-policy",
         }
     )
 
 
-def save(fig, path):
+def save(fig, path, *, vector=False):
     fig.savefig(path, dpi=180, bbox_inches="tight", pad_inches=0.18)
+    if vector:
+        svg = path.with_suffix(".svg")
+        fig.savefig(svg, bbox_inches="tight", pad_inches=0.18, metadata={"Date": None})
+        svg.write_text(
+            "\n".join(line.rstrip() for line in svg.read_text(encoding="utf-8").splitlines()) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
     plt.close(fig)
 
 
@@ -60,7 +69,7 @@ def band_label(entry):
 
 def dot_panels(entries, labels, title, subtitle, path):
     fig, axes = plt.subplots(
-        1, 2, figsize=(11.5, max(3.5, len(entries) * 0.65 + 1.5)), sharey=True, layout="constrained"
+        1, 2, figsize=(11.5, max(3.5, len(entries) * 0.45 + 1.8)), sharey=True, layout="constrained"
     )
     y = np.arange(len(entries))
     labels = [f"{label}　{entry['n']:,}局面" for label, entry in zip(labels, entries, strict=True)]
@@ -94,7 +103,7 @@ def plot_standard(report, output):
         entries,
         [band_label(entry) for entry in entries],
         "実際の棋力帯ごとの予測性能",
-        subtitle,
+        f"{report['snapshot_step']:,}更新 EMA ／ 検証用 {sum(entry['n'] for entry in entries):,}局面 ／ 0以上3000未満",
         output / "rating-performance.png",
     )
     entries = report["groups"]["ply"]
@@ -171,7 +180,10 @@ def plot_matrix(report, output):
         ),
     ]
     for filename, values, title, legend, cmap_name, centered, maximize in versions:
-        fig, ax = plt.subplots(figsize=(12.5, 6.5), layout="constrained")
+        fig, ax = plt.subplots(
+            figsize=(max(12.5, values.shape[1] * 0.85 + 3), max(6.5, values.shape[0] * 0.5 + 2)),
+            layout="constrained",
+        )
         cmap = plt.get_cmap(cmap_name)
         if centered:
             limit = max(float(np.nanmax(np.abs(values))), 0.0001)
@@ -245,7 +257,7 @@ def plot_matrix(report, output):
             pad=20,
             linespacing=1.8,
         )
-        save(fig, output / f"{filename}.png")
+        save(fig, output / f"{filename}.png", vector=True)
 
 
 def main():

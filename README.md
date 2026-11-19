@@ -62,6 +62,7 @@ for move in result.moves:
 
 自分の入力Rを変えた場合の正解率も、[実際の棋力帯とのヒートマップ](docs/rating-response.md)で比較できます。
 相手R、時計、履歴を固定し、各棋力帯の同じ局面を使っています。
+R帯は0以上3000未満を200刻み、入力Rは各帯の中央の100、300、…、2900で比較しています。
 
 ![実際の棋力帯と入力Rごとの正解率](docs/assets/rating-input-accuracy.png)
 

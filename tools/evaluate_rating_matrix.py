@@ -11,9 +11,9 @@ from evaluate import FEATURES, metrics, predict, summarize
 
 from shogi_human_policy import PolicyModel
 
-BOUNDARIES = [500, 1000, 1500, 2000, 2500, 3000]
-INPUT_RATINGS = [250, 750, 1250, 1500, 1750, 2250, 2750, 3250]
-BAND_NAMES = ["500未満", "500〜999", "1000〜1499", "1500〜1999", "2000〜2499", "2500〜2999", "3000以上"]
+BOUNDARIES = list(range(200, 3000, 200))
+INPUT_RATINGS = list(range(100, 3000, 200))
+BAND_NAMES = [f"{lower}〜{lower + 199}" for lower in range(0, 3000, 200)]
 
 
 def stratified_indices(ratings, known, cap, seed):
@@ -21,7 +21,7 @@ def stratified_indices(ratings, known, cap, seed):
     bands = np.digitize(ratings, BOUNDARIES)
     selected = []
     for band in range(len(BOUNDARIES) + 1):
-        candidates = np.flatnonzero((bands == band) & known)
+        candidates = np.flatnonzero((bands == band) & known & (ratings >= 0) & (ratings < 3000))
         selected.extend(rng.choice(candidates, min(len(candidates), cap), replace=False))
     return np.sort(selected).astype(np.int64), bands
 
@@ -58,7 +58,7 @@ def main():
         normalization="legal moves, temperature=1",
         seed=args.seed,
         per_band_cap=args.per_band,
-        sampling="uniform without replacement within each known self-rating band",
+        sampling="uniform without replacement within each known self-rating band; 0 <= rating < 3000",
         input_ratings=INPUT_RATINGS,
         fixed="observed opponent rating, clocks, full history",
         bands=[],
@@ -70,8 +70,17 @@ def main():
         report["bands"].append(
             dict(
                 label=name,
+                lower=200 * band,
+                upper=200 * (band + 1),
                 n=int((selected_bands == band).sum()),
-                available=int(((bands == band) & (data["condition_known"][:, 0] > 0)).sum()),
+                available=int(
+                    (
+                        (bands == band)
+                        & (data["condition_known"][:, 0] > 0)
+                        & (data["ratings"][:, 0] >= 0)
+                        & (data["ratings"][:, 0] < 3000)
+                    ).sum()
+                ),
             )
         )
     for rating in [*INPUT_RATINGS, None]:
