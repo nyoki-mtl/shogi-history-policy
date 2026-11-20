@@ -92,7 +92,10 @@ def plot_standard(report, output, *, rating_entries=None):
     entries = rating_entries
     if entries is None:
         entries = [entry for entry in report["groups"]["self_rating"] if not entry.get("unknown")]
-    subtitle = f"{report['snapshot_step']:,}更新 EMA ／ 検証用 {report['baseline']['n']:,}局面 ／ float32"
+    model_label = report.get("model_version") or (
+        f"{report['snapshot_step']:,}更新 EMA" if "snapshot_step" in report else "EMA"
+    )
+    subtitle = f"{model_label} ／ 検証用 {report['baseline']['n']:,}局面 ／ float32"
     fig, axes = plt.subplots(2, 1, figsize=(10.8, 5.6), sharex=True, layout="constrained")
     centers = [(entry["lower"] + entry["upper"]) / 2 for entry in entries]
     for ax, key, title, color in zip(

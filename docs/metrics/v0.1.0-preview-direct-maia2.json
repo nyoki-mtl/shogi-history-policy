@@ -1,6 +1,6 @@
 {
   "schema": "shogi-human-policy-direct-maia2-v1",
-  "snapshot_step": 605000,
+  "model_version": "v0.1.0-preview",
   "weights_sha256": "9156ebd9d0706b47508763ea91dcee84e2d989b89bb69cfddde4006a907867b6",
   "maia2_sha256": "428e9c4be79401d2f82a8890dd388d30e58d9e6421b187a5719af0e3c81ef927",
   "source_dataset_sha256": "3b42c28996c87109f0f0fc0064f5a742e282ac44f62642c63fa48bbfa7d4f129",

@@ -47,8 +47,8 @@ position = Position.from_kif(kif_text, ply=30)
 ## CLI
 
 ```console
-shogi-human-policy predict --model models/preview-step-0605000 --position "startpos" --moves 7g7f 3c3d
-shogi-human-policy predict --model models/preview-step-0605000 --file game.kif --ply 30 --format json
+shogi-human-policy predict --model models/v0.1.0-preview --position "startpos" --moves 7g7f 3c3d
+shogi-human-policy predict --model models/v0.1.0-preview --file game.kif --ply 30 --format json
 ```
 
 - `--position` と `--file` は排他指定です（両方省略時は平手初期局面）。

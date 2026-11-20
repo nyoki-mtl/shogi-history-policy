@@ -2,7 +2,7 @@
 
 [README に戻る](../README.md)
 
-`preview-step-0605000` EMA を、R 帯（0〜2999 の 200 刻み）と手数帯を揃えた validation 30,000 局面（各帯 2,000 局面）で分析しました（temperature 1・全合法手正規化、test 集合は未使用）。
+`v0.1.0-preview` を、R 帯（0〜2999 の 200 刻み）と手数帯を揃えた validation 30,000 局面（各帯 2,000 局面）で分析しました（temperature 1・全合法手正規化、test 集合は未使用）。
 
 足立知己・竹内聖悟「Maia2におけるレート帯別モデルの一貫性と棋力差に関する分析」（GPW2026）の 4.2〜4.5 節に対応する指標を測定しています。原論文とはモデル・学習データ・R 帯の定義が異なるため、数値の厳密な追試ではありません。
 
@@ -97,10 +97,10 @@
 
 ## 集計データと再生成
 
-- 集計 JSON: [paper-diagnostics JSON](metrics/preview-step-0605000-paper-diagnostics.json)
+- 集計 JSON: [paper-diagnostics JSON](metrics/v0.1.0-preview-paper-diagnostics.json)
 - 再集計・再描画コマンド（手元のデータセット NPZ を使用、図の再生成には日本語フォントが必要）：
 
 ```console
-uv run python tools/evaluate_paper_diagnostics.py --model models/preview-step-0605000 --dataset /path/to/matched-paper-validation.npz --cache work_dir/paper-cache.npz --output docs/metrics/preview-step-0605000-paper-diagnostics.json
-uv run python tools/plot_paper_diagnostics.py docs/metrics/preview-step-0605000-paper-diagnostics.json
+uv run python tools/evaluate_paper_diagnostics.py --model models/v0.1.0-preview --dataset /path/to/matched-paper-validation.npz --cache work_dir/paper-cache.npz --output docs/metrics/v0.1.0-preview-paper-diagnostics.json
+uv run python tools/plot_paper_diagnostics.py docs/metrics/v0.1.0-preview-paper-diagnostics.json
 ```

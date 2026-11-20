@@ -5,7 +5,7 @@
 作者の前作 [nyoki-mtl/maia2-shogi](https://github.com/nyoki-mtl/maia2-shogi) に続く取り組みで、`rsshogi-az` の学習済み重みを出発点に R と時計を AdaLN で条件付けしています。
 
 > [!NOTE]
-> 現在はローカル準備版（`preview-step-0605000` EMA）です。GitHubリポジトリと重みの配布先はまだ公開していません。
+> 現在はローカル準備版（`v0.1.0-preview`）です。GitHubリポジトリと重みの配布先はまだ公開していません。
 
 ## クイックスタート
 
@@ -17,8 +17,8 @@ Python 3.11〜3.13 で動作します（学習環境・JAX・TPU・棋譜DBは�
 
 ```console
 uv sync
-uv run shogi-human-policy predict --model models/preview-step-0605000 --position "startpos moves 7g7f 3c3d"
-uv run shogi-human-policy predict --model models/preview-step-0605000 --file examples/records/opening.kif --ply 2 --top-k 5
+uv run shogi-human-policy predict --model models/v0.1.0-preview --position "startpos moves 7g7f 3c3d"
+uv run shogi-human-policy predict --model models/v0.1.0-preview --file examples/records/opening.kif --ply 2 --top-k 5
 ```
 
 | 入力できる情報 | CLI オプション例 |
@@ -35,7 +35,7 @@ uv run shogi-human-policy predict --model models/preview-step-0605000 --file exa
 ```python
 from shogi_human_policy import Conditions, PolicyModel, Position
 
-model = PolicyModel.from_directory("models/preview-step-0605000")
+model = PolicyModel.from_directory("models/v0.1.0-preview")
 position = Position.from_file("examples/records/opening.kif", ply=2)
 
 result = model.predict(
@@ -61,7 +61,7 @@ for row in result.as_rows(position):
 
 ---
 
-## 予測性能（`preview-step-0605000` EMA）
+## 予測性能（`v0.1.0-preview`）
 
 数値はすべて **temperature 1・全合法手を分母とした正規化** で算出しています。policy 一致率は指定 R での対局棋力やレーティング校正を保証するものではありません。
 

@@ -1,6 +1,6 @@
 {
   "schema": "shogi-human-policy-rating-matrix-v1",
-  "snapshot_step": 605000,
+  "model_version": "v0.1.0-preview",
   "weights_sha256": "9156ebd9d0706b47508763ea91dcee84e2d989b89bb69cfddde4006a907867b6",
   "dataset_sha256": "ce69a2c5d9badfe10551d32d4a130d629b55ffbaf9c2960fd81d1c2eafa89fbc",
   "split": "validation",

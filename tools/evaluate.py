@@ -104,7 +104,7 @@ def main():
     print(f"baseline {n}: {summarize(m)} ({elapsed:.1f}s)", flush=True)
     report = dict(
         schema="shogi-human-policy-evaluation-v1",
-        snapshot_step=model.manifest["step"],
+        model_version=model.manifest.get("model_version") or model.manifest.get("status", "unknown"),
         weights_sha256=model.manifest["files"]["policy.safetensors"],
         dataset_sha256=dataset_sha,
         split="validation",

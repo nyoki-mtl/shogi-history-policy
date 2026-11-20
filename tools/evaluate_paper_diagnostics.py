@@ -251,7 +251,7 @@ def main():
 
     report = dict(
         schema="shogi-human-policy-paper-diagnostics-v1",
-        snapshot_step=model.manifest["step"],
+        model_version=model.manifest.get("model_version") or model.manifest.get("status", "unknown"),
         **metadata,
         split="validation",
         n=n,

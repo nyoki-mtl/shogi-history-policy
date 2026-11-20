@@ -15,7 +15,7 @@
     "smolgen_hidden_channels": 32,
     "smolgen_hidden_dim": 128
   },
-  "step": 605000,
+  "model_version": "v0.1.0-preview",
   "selection": "ema",
   "status": "training-preview",
   "policy_labels": 1496,
