@@ -1,9 +1,9 @@
 {
   "model_version": "v0.1.0-preview",
-  "weights_sha256": "9057db72b6586fe0818586d592a7014931ea62859d9032aac5052b41ce576452",
+  "weights_sha256": "190695a614ec6e100ea4f2666d949ccebd970fcf68c86321f0658cd4e2804b80",
   "precision": "float32 CPU",
   "positions": 48,
-  "max_absolute_logit_error": 3.7670135498046875e-05,
+  "max_absolute_logit_error": 3.4332275390625e-05,
   "atol": 0.0003,
   "rtol": 3e-05,
   "feature_parity_inputs": 720,
@@ -11,10 +11,10 @@
   "tiny_fixture_max_absolute_logit_error": 5.960464477539062e-07,
   "cuda_check": {
     "model_version": "v0.1.0-preview",
-    "weights_sha256": "9057db72b6586fe0818586d592a7014931ea62859d9032aac5052b41ce576452",
+    "weights_sha256": "190695a614ec6e100ea4f2666d949ccebd970fcf68c86321f0658cd4e2804b80",
     "rows": 128,
-    "cpu_cuda_probability_maxabs": 1.059584555096471e-06,
-    "gpu_batch32_64_probability_maxabs": 1.4610988885443987e-06,
+    "cpu_cuda_probability_maxabs": 1.226184278557696e-06,
+    "gpu_batch32_64_probability_maxabs": 1.2794136500793307e-06,
     "top1_equal": true,
     "cpu_torch": "2.11.0+cu130",
     "cuda_tf32": false
