@@ -87,9 +87,15 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--threads", type=int, default=4)
+    parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
+    parser.add_argument("--baseline-cache", type=Path, help="Private per-position baseline metrics")
     args = parser.parse_args()
     torch.set_num_threads(args.threads)
-    model = PolicyModel.from_directory(args.model)
+    if args.device == "cuda":
+        torch.backends.cuda.matmul.allow_tf32 = False
+        torch.backends.cudnn.allow_tf32 = False
+        torch.cuda.set_per_process_memory_fraction(0.15)
+    model = PolicyModel.from_directory(args.model, device=args.device)
     with np.load(args.dataset, allow_pickle=False) as archive:
         data = {k: archive[k] for k in (*FEATURES, "legal_policy_mask", "labels")}
     n = len(data["labels"])
@@ -100,6 +106,14 @@ def main():
     start = time.perf_counter()
     p = predict(model, data, np.arange(n), "baseline", args.batch_size)
     m = metrics(p, data["labels"])
+    if args.baseline_cache:
+        args.baseline_cache.parent.mkdir(parents=True, exist_ok=True)
+        np.savez_compressed(
+            args.baseline_cache,
+            dataset_sha256=dataset_sha,
+            weights_sha256=model.manifest["files"]["policy.safetensors"],
+            **m,
+        )
     elapsed = time.perf_counter() - start
     print(f"baseline {n}: {summarize(m)} ({elapsed:.1f}s)", flush=True)
     report = dict(
@@ -108,7 +122,7 @@ def main():
         weights_sha256=model.manifest["files"]["policy.safetensors"],
         dataset_sha256=dataset_sha,
         split="validation",
-        precision="float32 CPU",
+        precision="float32 " + args.device.upper() + ("; TF32 disabled" if args.device == "cuda" else ""),
         environment=dict(torch=torch.__version__, numpy=np.__version__),
         normalization="legal moves, temperature=1",
         rating_group_range=dict(lower_inclusive=0, upper_exclusive=3000, width=200),
