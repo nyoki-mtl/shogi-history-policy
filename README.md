@@ -93,6 +93,7 @@ SFENの貼り付け、棋譜アップロード、途中局面の選択、盤面�
 この図は各R帯2,000局面で、20手刻みの手数帯の内訳を揃えた別のvalidation標本です。
 [入力Rの効果](docs/rating-response.md)と[評価結果](docs/evaluation.md)に、条件の省略、履歴、手数帯ごとの比較を掲載しています。
 [論文に対応した追加分析](docs/paper-analysis.md)では、一致パターン、順位別と着手別の分布比較、確率の校正も確認しています。
+[maia2-shogiとの同一局面比較](docs/direct-comparison.md)も掲載しています。
 
 ## モデルと利用範囲
 
