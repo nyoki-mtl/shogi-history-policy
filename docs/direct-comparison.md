@@ -25,9 +25,11 @@
 
 ## R 帯別比較
 
-![R帯別の直接比較](assets/direct-maia-rating-performance.png)
+![R帯別の直接比較（正解率）](assets/direct-maia-rating-accuracy.png)
 
-自他 R に観測値を入力した結果、評価した全 10 帯（800〜2799）で本モデルの平均一致率と NLL が改善しました。
+![R帯別の直接比較（NLL）](assets/direct-maia-rating-nll.png)
+
+実線は同一 16,010 局面（800〜2799）、破線は全 R 帯 30,000 局面（0〜2999）における本モデルの参考値です。自他 R に観測値を入力した結果、評価した全 10 帯（800〜2799）で本モデルの平均一致率と NLL が改善しました。
 
 | 実 R 帯 | Maia 正解率 | 本モデル正解率 | Maia NLL | 本モデル NLL |
 |---|---:|---:|---:|---:|
@@ -46,7 +48,9 @@
 
 ## 手数帯別比較
 
-![手数別の直接比較](assets/direct-maia-phase-performance.png)
+![手数別の直接比較（正解率）](assets/direct-maia-phase-accuracy.png)
+
+![手数別の直接比較（NLL）](assets/direct-maia-phase-nll.png)
 
 | 初期局面からの着手数 | Maia 正解率 | 本モデル正解率 | Maia NLL | 本モデル NLL |
 |---|---:|---:|---:|---:|
@@ -85,4 +89,4 @@
 - **抽出方法**: 既存の均等化 validation（30,000 局面）のうち、自他 R がともに 800 以上 2800 未満の局面から、10 の自 R 帯ごとに 20 手刻みの手数構成を揃えて各帯 1,601 局面（計 16,010 局面）を非復元抽出しました。
 - **モデル変換**: `maia2-shogi` は 119 特徴量＋100 刻み R カテゴリに変換して ONNX で推論し、両モデルのラベル（2187 / 1496）を同じ USI 合法手集合へ対応させています。
 - **区間推定**: 対局単位 bootstrap 2,000 回による個別 95% 区間です（同一プレイヤーの相関と多重比較は未補正）。
-- **集計 JSON / 図の再生成**: [集計 JSON](metrics/v0.1.0-preview-direct-maia2.json) から `uv run python tools/plot_direct_comparison.py docs/metrics/v0.1.0-preview-direct-maia2.json` で図を再生成できます。
+- **集計 JSON / 図の再生成**: [集計 JSON](metrics/v0.1.0-preview-direct-maia2.json) から `uv run python tools/plot_direct_comparison.py docs/metrics/v0.1.0-preview-direct-maia2.json --rating-matrix docs/metrics/v0.1.0-preview-rating-matrix.json` で図を再生成できます。

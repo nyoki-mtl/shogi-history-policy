@@ -76,9 +76,11 @@ for row in result.as_rows(position):
 - **入力の寄与**（自然頻度 5,000局面）：R を省略すると NLL が `+0.0149`、履歴を省略（現在局面のみ）すると `+0.0499` 悪化します。
 - **手数帯別の比較**（共通範囲 16,010局面）：20手以降は全帯で本モデルが改善（40〜79手 +6.84pt、80手以降 +8.39pt）。ただし 0〜19手の NLL は `maia2-shogi` の方が良好でした。
 
-![maia2-shogiとのR帯別比較（正解率・NLL）](docs/assets/direct-maia-rating-performance.png)
+![maia2-shogiとのR帯別比較（正解率）](docs/assets/direct-maia-rating-accuracy.png)
 
-共通範囲 16,010局面（R 800〜2799 の 200刻み・手数帯構成を揃えた validation 標本）での比較です。全帯で正解率と NLL が改善しています（詳細は [maia2-shogi との同一局面比較](docs/direct-comparison.md)）。
+![maia2-shogiとのR帯別比較（NLL）](docs/assets/direct-maia-rating-nll.png)
+
+実線は共通範囲 16,010局面（R 800〜2799）での同一局面比較、破線は全 R 帯 30,000局面（R 0〜2999）における本モデルの参考値です。800〜2799 の全帯で正解率と NLL が改善しています（詳細は [maia2-shogi との同一局面比較](docs/direct-comparison.md)）。
 
 ### 入力Rに対する応答
 
