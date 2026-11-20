@@ -134,6 +134,53 @@ def main():
     fig.legend(*axes[0].get_legend_handles_labels(), loc="outside upper center", ncol=2, frameon=False)
     save(fig, args.output / "direct-maia-response-by-phase.png", vector=True)
 
+    by_lower = {b["lower"]: b for b in report["bands"]}
+    rating_groups = (
+        ("低 (800〜1399)", (800, 1000, 1200)),
+        ("中 (1400〜1999)", (1400, 1600, 1800)),
+        ("高 (2000〜2799)", (2000, 2200, 2400, 2600)),
+    )
+    jsd_pairs = (
+        ("900_1600", "低–中\n(900 vs 1600)"),
+        ("1600_2100", "中–高\n(1600 vs 2100)"),
+        ("900_2100", "低–高\n(900 vs 2100)"),
+    )
+    fig, axes = plt.subplots(2, 2, figsize=(9.6, 6.2), sharex=True, sharey=True, layout="constrained")
+    for row, (metric_key, metric_label) in enumerate(
+        (("rank_jsd", "順位別 Top-5 平均 JSD"), ("full_jsd", "着手別 平均 JSD"))
+    ):
+        grids = {}
+        for model in MODELS[:2]:
+            grids[model] = np.array(
+                [
+                    [
+                        np.mean(
+                            [by_lower[low]["response"][model]["pairs"][pair][metric_key] for low in lowers]
+                        )
+                        for pair, _ in jsd_pairs
+                    ]
+                    for _, lowers in rating_groups
+                ]
+            )
+        vmax = max(float(g.max()) for g in grids.values()) * 1.05
+        for col, (model, model_label) in enumerate(zip(MODELS[:2], LABELS[:2], strict=True)):
+            ax = axes[row, col]
+            grid = grids[model]
+            ax.imshow(grid, cmap="Blues", vmin=0.0, vmax=vmax, aspect="auto")
+            for i in range(len(rating_groups)):
+                for j in range(len(jsd_pairs)):
+                    val = grid[i, j]
+                    text_color = "#ffffff" if val > vmax * 0.55 else "#1f2937"
+                    ax.text(j, i, f"{val:.4f}", ha="center", va="center", color=text_color, fontsize=10.5)
+            ax.set_xticks(np.arange(len(jsd_pairs)), [lbl for _, lbl in jsd_pairs], fontsize=9.5)
+            ax.set_yticks(np.arange(len(rating_groups)), [lbl for lbl, _ in rating_groups], fontsize=9.5)
+            ax.tick_params(length=0, pad=6)
+            if row == 0:
+                ax.set_title(model_label, loc="left", fontsize=11)
+            if col == 0:
+                ax.set_ylabel(metric_label, fontsize=10)
+    save(fig, args.output / "direct-maia-jsd-tables.png", vector=True)
+
 
 if __name__ == "__main__":
     main()
