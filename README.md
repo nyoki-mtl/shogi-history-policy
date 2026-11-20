@@ -2,7 +2,7 @@
 
 レーティング（R）、残り持ち時間、最大8局面の履歴から、人間が次に指す手の確率分布を予測する将棋モデルです。棋譜の途中局面を調べたり、入力Rを変えて着手傾向の違いを比較したりできます。
 
-作者の前作 [nyoki-mtl/maia2-shogi](https://github.com/nyoki-mtl/maia2-shogi) に続く取り組みで、`rsshogi-az` の学習済み重みを出発点に R と時計を AdaLN で条件付けしています。
+作者の前作 [nyoki-mtl/maia2-shogi](https://github.com/nyoki-mtl/maia2-shogi) に続く取り組みで、事前学習済みの Transformer 重みを出発点に R と時計を AdaLN で条件付けしています。
 
 > [!NOTE]
 > 現在はローカル準備版（`v0.1.0-preview`）です。GitHubリポジトリと重みの配布先はまだ公開していません。
@@ -80,7 +80,7 @@ for row in result.as_rows(position):
 
 ![maia2-shogiとのR帯別比較（NLL）](docs/assets/direct-maia-rating-nll.png)
 
-実線は共通範囲 16,010局面（R 800〜2799）での同一局面比較、破線は全 R 帯 30,000局面（R 0〜2999）における本モデルの参考値です。800〜2799 の全帯で正解率と NLL が改善しています（詳細は [maia2-shogi との同一局面比較](docs/direct-comparison.md)）。
+`maia2-shogi` は対応範囲の R 800〜2799（共通範囲 16,010局面）、`新モデル` と `新モデル（履歴1のみ）` は全 R 帯 R 0〜2999（30,000局面）の成績です（厳密な同一 16,010局面の比較数値は [maia2-shogi との同一局面比較](docs/direct-comparison.md) を参照）。
 
 ### 入力Rに対する応答
 
@@ -98,7 +98,7 @@ R帯（200刻み）と手数帯の内訳を揃えた validation 30,000局面（�
 
 ## モデル仕様と利用範囲
 
-- **構造**: `rsshogi-az` 由来の 95 token Transformer + AdaLN（14,723,681 パラメータ）、最大8局面の履歴を入力
+- **構造**: 95 token Transformer + AdaLN（14,723,681 パラメータ）、最大8局面の履歴を入力
 - **出力**: 全合法手に対する確率分布（上位候補だけを表示しても再正規化しません）
 - **対象外**: value 予測・探索・投了判断・時間配分を行う USI エンジン機能は含みません
 - **想定尺度**: R は学習元の将棋倶楽部24の尺度を想定しており、他サービスへの換算は未検証です

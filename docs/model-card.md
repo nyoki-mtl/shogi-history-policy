@@ -4,14 +4,14 @@
 
 ## ローカル準備版の概要
 
-作者の前作 [nyoki-mtl/maia2-shogi](https://github.com/nyoki-mtl/maia2-shogi) に続き、`rsshogi-az` の学習済み重みを出発点として R・持ち時間・履歴で人間の着手を条件付けしたモデルです。現在は学習途中のローカル準備版です。
+作者の前作 [nyoki-mtl/maia2-shogi](https://github.com/nyoki-mtl/maia2-shogi) に続き、事前学習済みの Transformer 重みを出発点として R・持ち時間・履歴で人間の着手を条件付けしたモデルです。現在は学習途中のローカル準備版です。
 
 | 項目 | 内容 |
 |---|---|
 | モデルバージョン | `v0.1.0-preview`（EMA 重み・学習途中の先行版） |
 | 推論重み | float32、14,723,681 パラメータ（58,922,020 bytes） |
-| 構造 | 95 token Transformer + AdaLN（Lc0 / BT4 系設計に基づく `rsshogi-az` 由来） |
-| 初期重み | `rsshogi-az` の学習済み EMA 重み |
+| 構造 | 95 token Transformer + AdaLN（Lc0 / BT4 系設計） |
+| 初期重み | 事前学習済みの将棋 Transformer EMA 重み |
 | 学習対象データ | 将棋倶楽部24の棋譜データ（自然頻度） |
 | 学習対象の head | 人間の着手を教師とする policy のみ |
 

@@ -22,21 +22,19 @@ def setup(ax, xlabel):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("report", type=Path)
-    parser.add_argument("--rating-matrix", type=Path, default=None)
+    parser.add_argument("--paper-diagnostics", type=Path, default=None)
     parser.add_argument("--output", type=Path, default=Path("docs/assets"))
     args = parser.parse_args()
     report = json.loads(args.report.read_text(encoding="utf-8"))
-    rating_matrix = (
-        json.loads(args.rating_matrix.read_text(encoding="utf-8")) if args.rating_matrix is not None else None
+    paper = (
+        json.loads(args.paper_diagnostics.read_text(encoding="utf-8"))
+        if args.paper_diagnostics is not None
+        else None
     )
     configure_fonts()
     args.output.mkdir(parents=True, exist_ok=True)
     x = np.array([(b["lower"] + b["upper"]) / 2 for b in report["bands"]])
-    rm_x = (
-        np.array([(b["lower"] + b["upper"]) / 2 for b in rating_matrix["bands"]])
-        if rating_matrix is not None
-        else None
-    )
+    full_x = np.arange(100, 3000, 200)
     for group, prefix, xlabel in (
         ("bands", "direct-maia-rating", "実R（200刻み）"),
         ("phases", "direct-maia-phase", "初期局面からの着手数"),
@@ -48,27 +46,38 @@ def main():
             ("nll", 1, "損失（NLL、小さいほど良い）", "nll"),
         ):
             fig, ax = plt.subplots(figsize=(7.6, 4.2), layout="constrained")
-            for model, label, color in zip(MODELS, LABELS, COLORS, strict=True):
+            if group == "bands" and paper is not None:
                 ax.plot(
                     coords,
-                    [b["models"][model][key] * scale for b in values],
-                    color=color,
+                    [b["models"]["maia2"][key] * scale for b in values],
+                    color=COLORS[0],
                     marker="o",
                     markersize=4,
-                    label=label,
+                    label="maia2-shogi",
                 )
-            if group == "bands" and rating_matrix is not None:
-                ax.plot(
-                    rm_x,
-                    [o[key] * scale for o in rating_matrix["observed"]],
-                    color="#2166ac",
-                    linestyle="--",
-                    linewidth=1.4,
-                    alpha=0.75,
-                    marker="o",
-                    markersize=3,
-                    label="新モデル（全R帯 30,000局面・参考）",
-                )
+                for ctx, label, color in (
+                    ("observed", "新モデル", COLORS[1]),
+                    ("observed_current_only", "新モデル（履歴1のみ）", COLORS[2]),
+                ):
+                    bands = paper["contexts"][ctx]["bands"]
+                    ax.plot(
+                        full_x,
+                        [b["cases"]["None"][key] * scale for b in bands],
+                        color=color,
+                        marker="o",
+                        markersize=4,
+                        label=label,
+                    )
+            else:
+                for model, label, color in zip(MODELS, LABELS, COLORS, strict=True):
+                    ax.plot(
+                        coords,
+                        [b["models"][model][key] * scale for b in values],
+                        color=color,
+                        marker="o",
+                        markersize=4,
+                        label=label,
+                    )
             if group == "bands":
                 ax.set_xlim(0, 3000)
                 ax.set_xticks(np.arange(0, 3001, 200), np.arange(0, 3001, 200), rotation=45, fontsize=9)
@@ -76,8 +85,7 @@ def main():
                 ax.set_xticks(coords, [b["label"] for b in values], fontsize=10)
             ax.set_title(title, loc="left")
             setup(ax, xlabel)
-            ncol = 2 if (group == "bands" and rating_matrix is not None) else 3
-            fig.legend(*ax.get_legend_handles_labels(), loc="outside upper center", ncol=ncol, frameon=False)
+            fig.legend(*ax.get_legend_handles_labels(), loc="outside upper center", ncol=3, frameon=False)
             save(fig, args.output / f"{prefix}-{suffix}.png", vector=True)
 
     fig, axes = plt.subplots(2, 2, figsize=(11, 6.5), sharex=True, sharey="row", layout="constrained")
