@@ -1,5 +1,5 @@
 {
-  "model_version": "v0.1.0-preview",
+  "model_version": "v0.1.0",
   "weights_sha256": "190695a614ec6e100ea4f2666d949ccebd970fcf68c86321f0658cd4e2804b80",
   "precision": "float32 CPU",
   "positions": 48,
@@ -10,7 +10,7 @@
   "feature_parity_plies": 180,
   "tiny_fixture_max_absolute_logit_error": 5.960464477539062e-07,
   "cuda_check": {
-    "model_version": "v0.1.0-preview",
+    "model_version": "v0.1.0",
     "weights_sha256": "190695a614ec6e100ea4f2666d949ccebd970fcf68c86321f0658cd4e2804b80",
     "rows": 128,
     "cpu_cuda_probability_maxabs": 1.226184278557696e-06,

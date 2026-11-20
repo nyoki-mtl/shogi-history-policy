@@ -15,9 +15,9 @@
     "smolgen_hidden_channels": 32,
     "smolgen_hidden_dim": 128
   },
-  "model_version": "v0.1.0-preview",
+  "model_version": "v0.1.0",
   "selection": "ema",
-  "status": "training-preview",
+  "status": "release",
   "policy_labels": 1496,
   "history_frames": 8,
   "history_padding": "zero_board_hand31",

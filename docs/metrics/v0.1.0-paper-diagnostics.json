@@ -1,6 +1,6 @@
 {
   "schema": "shogi-human-policy-paper-diagnostics-v1",
-  "model_version": "v0.1.0-preview",
+  "model_version": "v0.1.0",
   "dataset_sha256": "3b42c28996c87109f0f0fc0064f5a742e282ac44f62642c63fa48bbfa7d4f129",
   "weights_sha256": "190695a614ec6e100ea4f2666d949ccebd970fcf68c86321f0658cd4e2804b80",
   "precision": "float32 CUDA; TF32 disabled",

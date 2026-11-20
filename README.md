@@ -3,11 +3,8 @@
 人間が次に指す手の確率分布を予測する将棋モデルです。
 プレイヤのレーティング、残り持ち時間、最大8局面の履歴を入力することができ、状況やプレイヤの強さを考慮した予測をします。
 
-作者の前作 [nyoki-mtl/maia2-shogi](https://github.com/nyoki-mtl/maia2-shogi) に続く取り組みで、事前学習済みの Transformer 重みを出発点に AdaLN でモデルに条件付けしています。
+作者の前作 [nyoki-mtl/maia2-shogi](https://github.com/nyoki-mtl/maia2-shogi) に続く取り組みで、事前学習済みの Transformer 重みを出発点に AdaLN でモデルに条件付けし、将棋倶楽部24の棋譜データ（約19億局面規模）で学習しています。
 手法の詳細は、情報処理学会 第57回ゲーム情報学研究発表会にて発表した論文「[条件付き正規化を用いた棋力に応じた将棋方策関数の学習](https://www.ipsj.or.jp/kenkyukai/event/gi57.html)」（情報処理学会研究報告 Vol.2026-GI-57, No.2, pp.1-6, 2026年3月）に基づいています。
-
-> [!NOTE]
-> 現在はローカル準備版（`v0.1.0-preview`）です。GitHubリポジトリと重みの配布先はまだ公開していません。
 
 ## クイックスタート
 
@@ -15,12 +12,12 @@ Python 3.11〜3.13 で動作します（学習環境・JAX・TPU・棋譜DBは�
 
 ### CLI で試す
 
-モデルディレクトリ（`manifest.json` と `policy.safetensors` の2ファイル）を用意して実行します。
+Releases から `v0.1.0` のモデルファイル（`manifest.json` と `policy.safetensors` の2ファイル）を取得し、`models/v0.1.0/` に配置して実行します。
 
 ```console
 uv sync
-uv run shogi-human-policy predict --model models/v0.1.0-preview --position "startpos moves 7g7f 3c3d"
-uv run shogi-human-policy predict --model models/v0.1.0-preview --file examples/records/opening.kif --ply 2 --top-k 5
+uv run shogi-human-policy predict --model models/v0.1.0 --position "startpos moves 7g7f 3c3d"
+uv run shogi-human-policy predict --model models/v0.1.0 --file examples/records/opening.kif --ply 2 --top-k 5
 ```
 
 | 入力できる情報                         | CLI オプション例                                                          |
@@ -37,7 +34,7 @@ uv run shogi-human-policy predict --model models/v0.1.0-preview --file examples/
 ```python
 from shogi_human_policy import Conditions, PolicyModel, Position
 
-model = PolicyModel.from_directory("models/v0.1.0-preview")
+model = PolicyModel.from_directory("models/v0.1.0")
 position = Position.from_file("examples/records/opening.kif", ply=2)
 
 result = model.predict(
@@ -63,7 +60,7 @@ for row in result.as_rows(position):
 
 ---
 
-## 予測性能（`v0.1.0-preview`）
+## 予測性能（`v0.1.0`）
 
 数値はすべて **temperature 1・全合法手を分母とした正規化** で算出しています。policy 一致率は指定 R での対局棋力やレーティング校正を保証するものではありません。
 
@@ -101,9 +98,11 @@ R帯（200刻み）と手数帯の内訳を揃えた validation 30,000局面（�
 ## モデル仕様と利用範囲
 
 - **構造**: 95 token Transformer + AdaLN（14,723,681 パラメータ）、最大8局面の履歴を入力
+- **学習データ**: 将棋倶楽部24の棋譜データ（約19億局面規模・自然頻度、評価用対局を除外）
 - **出力**: 全合法手に対する確率分布（上位候補だけを表示しても再正規化しません）
 - **対象外**: value 予測・探索・投了判断・時間配分を行う USI エンジン機能は含みません
 - **想定尺度**: R は学習元の将棋倶楽部24の尺度を想定しており、他サービスへの換算は未検証です
+- **ライセンス**: コードは [MIT License](LICENSE) です。モデル重みの利用条件は [モデルカード](docs/model-card.md) を参照してください。
 
 詳細は以下を参照してください。
 

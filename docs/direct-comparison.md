@@ -2,7 +2,7 @@
 
 [README に戻る](../README.md)
 
-作者の前作 [nyoki-mtl/maia2-shogi](https://github.com/nyoki-mtl/maia2-shogi)（公開 v0.2.1）と本モデル（`v0.1.0-preview`）を、**同一の 16,010 局面（6,984 対局）・同一の合法手集合・temperature 1・全合法手正規化** で比較しました。
+作者の前作 [nyoki-mtl/maia2-shogi](https://github.com/nyoki-mtl/maia2-shogi)（公開 v0.2.1）と本モデル（`v0.1.0`）を、**同一の 16,010 局面（6,984 対局）・同一の合法手集合・temperature 1・全合法手正規化** で比較しました。
 
 > [!NOTE]
 > - 公開 `maia2-shogi` の元学習データは手元にないため、同モデルに対する完全な未学習データであることは保証できません（本モデルに対しては学習と対局分離済みの validation です）。
@@ -89,4 +89,4 @@
 - **抽出方法**: 既存の均等化 validation（30,000 局面）のうち、自他 R がともに 800 以上 2800 未満の局面から、10 の自 R 帯ごとに 20 手刻みの手数構成を揃えて各帯 1,601 局面（計 16,010 局面）を非復元抽出しました。
 - **モデル変換**: `maia2-shogi` は 119 特徴量＋100 刻み R カテゴリに変換して ONNX で推論し、両モデルのラベル（2187 / 1496）を同じ USI 合法手集合へ対応させています。
 - **区間推定**: 対局単位 bootstrap 2,000 回による個別 95% 区間です（同一プレイヤーの相関と多重比較は未補正）。
-- **集計 JSON / 図の再生成**: [集計 JSON](metrics/v0.1.0-preview-direct-maia2.json) から `uv run python tools/plot_direct_comparison.py docs/metrics/v0.1.0-preview-direct-maia2.json --paper-diagnostics docs/metrics/v0.1.0-preview-paper-diagnostics.json` で図を再生成できます。
+- **集計 JSON / 図の再生成**: [集計 JSON](metrics/v0.1.0-direct-maia2.json) から `uv run python tools/plot_direct_comparison.py docs/metrics/v0.1.0-direct-maia2.json --paper-diagnostics docs/metrics/v0.1.0-paper-diagnostics.json` で図を再生成できます。

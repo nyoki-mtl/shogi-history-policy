@@ -1,6 +1,6 @@
 {
   "schema": "shogi-human-policy-evaluation-v1",
-  "model_version": "v0.1.0-preview",
+  "model_version": "v0.1.0",
   "weights_sha256": "190695a614ec6e100ea4f2666d949ccebd970fcf68c86321f0658cd4e2804b80",
   "dataset_sha256": "975d4ba5486590a8961cd5e836091fdab9d33b76347268616d4a53c5029c86e0",
   "split": "validation",

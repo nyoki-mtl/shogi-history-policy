@@ -2,7 +2,7 @@
 
 [README に戻る](../README.md)
 
-対象は `v0.1.0-preview`（EMA）です。すべての評価は **temperature 1・全合法手を分母とした正規化・局面等重み** で行い、対局単位で学習データと分離した validation 集合を使用しています（test 集合は未使用）。なお、これらの数値はモデルの一致率や入力感度を示すものであり、指定 R での対局棋力やレーティング校正を保証するものではありません。
+対象は `v0.1.0`（EMA）です。すべての評価は **temperature 1・全合法手を分母とした正規化・局面等重み** で行い、対局単位で学習データと分離した validation 集合を使用しています（test 集合は未使用）。なお、これらの数値はモデルの一致率や入力感度を示すものであり、指定 R での対局棋力やレーティング校正を保証するものではありません。
 
 ## 全体成績（自然頻度 50,000 局面）
 
@@ -105,13 +105,13 @@ R と過去履歴の省略は NLL を悪化させました。時計省略の差�
 
 ## 集計データと再生成
 
-- 集計 JSON: [全体・入力省略 JSON](metrics/v0.1.0-preview.json) / [実R×入力R マトリクス JSON](metrics/v0.1.0-preview-rating-matrix.json)
+- 集計 JSON: [全体・入力省略 JSON](metrics/v0.1.0.json) / [実R×入力R マトリクス JSON](metrics/v0.1.0-rating-matrix.json)
 - R 帯別集計では 3000 以上および不明 R を除外しています。bootstrap 区間は対局単位の再抽出（2,000 回）であり、同一プレイヤーの相関や多重比較は補正していません。
 - 評価用データセット（NPZ）は非配布ですが、手元の評価 NPZ を用意すれば以下のコマンドで再集計・再描画できます（図の再生成には日本語フォントが必要です）。
 
 ```console
 uv sync --group analysis
-uv run python tools/evaluate.py --model models/v0.1.0-preview --dataset /path/to/validation.npz --output docs/metrics/v0.1.0-preview.json
-uv run python tools/evaluate_rating_matrix.py --model models/v0.1.0-preview --dataset /path/to/matched-validation.npz --selection-info /path/to/matched-validation.json --per-band 2000 --cache work_dir/matched-metrics.npz --output docs/metrics/v0.1.0-preview-rating-matrix.json
-uv run python tools/plot_metrics.py docs/metrics/v0.1.0-preview.json --rating-matrix docs/metrics/v0.1.0-preview-rating-matrix.json
+uv run python tools/evaluate.py --model models/v0.1.0 --dataset /path/to/validation.npz --output docs/metrics/v0.1.0.json
+uv run python tools/evaluate_rating_matrix.py --model models/v0.1.0 --dataset /path/to/matched-validation.npz --selection-info /path/to/matched-validation.json --per-band 2000 --cache work_dir/matched-metrics.npz --output docs/metrics/v0.1.0-rating-matrix.json
+uv run python tools/plot_metrics.py docs/metrics/v0.1.0.json --rating-matrix docs/metrics/v0.1.0-rating-matrix.json
 ```
