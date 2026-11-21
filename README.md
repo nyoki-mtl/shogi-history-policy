@@ -12,7 +12,7 @@ Python 3.11〜3.13 で動作します。
 
 ### CLI で試す
 
-[Releases](https://github.com/nyoki-mtl/shogi-history-policy/releases) から `v0.1.0` のモデルファイル（`manifest.json` と `policy.safetensors` の2ファイル）を取得し、`models/v0.1.0/` に配置して実行します。
+[Releases](https://github.com/nyoki-mtl/shogi-human-policy/releases) から `v0.1.0` のモデルファイル（`manifest.json` と `policy.safetensors` の2ファイル）を取得し、`models/v0.1.0/` に配置して実行します。
 
 ```console
 uv sync
